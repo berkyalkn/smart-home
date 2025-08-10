@@ -1,5 +1,4 @@
 # =============================================================================
-#
 # Description:
 # This script serves as a fundamental test for sensor-based automation.
 # It reads input from an HC-SR501 PIR motion sensor and controls an LED
@@ -65,7 +64,6 @@ finally:
         print("Exiting program... Turning LED off and cleaning up pins.")
         lgpio.gpio_write(h, led_pin, 0)
         
-        # Free the GPIO pins
         lgpio.gpio_free(h, led_pin)
         lgpio.gpio_free(h, pir_pin)
         
