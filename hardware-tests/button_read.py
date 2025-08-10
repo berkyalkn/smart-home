@@ -1,3 +1,16 @@
+# =============================================================================
+# Description:
+# It demonstrates how to read a digital signal from the physical world using a push button.
+# The script continuously monitors a GPIO pin and prints a message to the
+# console whenever the button is pressed.
+#
+# Hardware Setup:
+# - A push button is connected to GPIO 17 (Physical Pin 11).
+# - A 10k Ohm pull-down resistor is used to ensure the pin reads a stable
+#   LOW signal when the button is not pressed, preventing "floating" state.
+# - The button circuit is powered by a 3.3V pin on the Pi.
+# =============================================================================
+
 import RPi.GPIO as GPIO
 import time
 

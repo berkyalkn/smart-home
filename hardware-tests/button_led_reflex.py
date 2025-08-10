@@ -1,3 +1,17 @@
+# =============================================================================
+# Description:
+# This script combines the concepts of GPIO input and output to create a
+# fundamental "reflex" circuit. It continuously reads the state of a push
+# button and mirrors that state to an LED. When the button is pressed, the
+# LED turns on; when it's released, the LED turns off. This demonstrates
+# the core event-action loop of any automation project.
+#
+# Hardware Setup:
+# - An LED circuit is connected to GPIO 27.
+# - A push button circuit (with a pull-down resistor) is connected to GPIO 17.
+# - This script controls both circuits simultaneously.
+# =============================================================================
+
 import RPi.GPIO as GPIO
 import time
 
