@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Home Dashboard</title>
+    <link rel="stylesheet" href="smart_home_main.css">
+</head>
+<body>
+    <div class="container">
+        <!-- AI Voice Assistant Section -->
+        <div class="voice-assistant">
+            <h2>AI Voice Assistant</h2>
+            <p>Tap the microphone to control your smart home with voice commands. Ask about temperature, control lighting, and monitor your home's status. Try saying "turn on living room lights" or "set temperature to 24 degrees".</p>
+            <button class="mic-button" onclick="toggleVoice()">
+                <span class="mic-icon">🎤</span>
+            </button>
+        </div>
+
+        <!-- Sensor Cards -->
+        <div class="sensor-grid">
+            <div class="sensor-card">
+                <div class="sensor-header">
+                    <span class="sensor-icon">🌡️</span>
+                    <span class="sensor-title">Temperature</span>
+                </div>
+                <div class="sensor-value" id="temperature">26.8°C</div>
+            </div>
+
+            <div class="sensor-card">
+                <div class="sensor-header">
+                    <span class="sensor-icon">💧</span>
+                    <span class="sensor-title">Humidity</span>
+                </div>
+                <div class="sensor-value" id="humidity">60.1%</div>
+            </div>
+
+            <div class="sensor-card">
+                <div class="sensor-header">
+                    <span class="sensor-icon">📊</span>
+                    <span class="sensor-title">Air Quality</span>
+                </div>
+                <div class="sensor-value" id="airQuality">119 AQI</div>
+                <div class="sensor-badge bad">Bad</div>
+            </div>
+
+            <div class="sensor-card">
+                <div class="sensor-header">
+                    <span class="sensor-icon">🚶</span>
+                    <span class="sensor-title">Motion</span>
+                </div>
+                <div class="sensor-value" id="motion">Clear</div>
+            </div>
+
+            <div class="sensor-card">
+                <div class="sensor-header">
+                    <span class="sensor-icon">💡</span>
+                    <span class="sensor-title">Light Level</span>
+                </div>
+                <div class="sensor-value" id="lightLevel">505 lux</div>
+            </div>
+        </div>
+
+        <!-- Control Cards -->
+        <div class="control-grid">
+            <!-- Light Controls -->
+            <div class="control-card">
+                <div class="control-header">
+                    <span class="control-icon">💡</span>
+                    <span class="control-title">Light Controls</span>
+                </div>
+                <div class="control-items">
+                    <div class="control-item">
+                        <span>Living Room</span>
+                        <label class="switch">
+                            <input type="checkbox" onchange="toggleLight('living-room', this)">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="control-item">
+                        <span>Bedroom</span>
+                        <label class="switch">
+                            <input type="checkbox" onchange="toggleLight('bedroom', this)">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Living Room -->
+            <div class="control-card">
+                <div class="control-header">
+                    <span class="control-icon">🏠</span>
+                    <span class="control-title">Living Room</span>
+                </div>
+                <div class="control-items">
+                    <div class="control-item">
+                        <span>Main Light</span>
+                        <label class="switch">
+                            <input type="checkbox" onchange="toggleLight('main-light', this)">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Climate Control -->
+            <div class="control-card">
+                <div class="control-header">
+                    <span class="control-icon">❄️</span>
+                    <span class="control-title">Climate Control</span>
+                </div>
+                <div class="climate-display">
+                    <div class="target-temp" id="targetTemp">22.5°C</div>
+                    <div class="temp-label">Target Temperature</div>
+                </div>
+                <div class="climate-modes">
+                    <div class="mode-item">
+                        <span>Auto</span>
+                        <span class="percentage">69%</span>
+                    </div>
+                    <div class="mode-item">
+                        <span>Heat</span>
+                        <span class="percentage">30%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Smart Outlets -->
+            <div class="control-card">
+                <div class="control-header">
+                    <span class="control-icon">🔌</span>
+                    <span class="control-title">Smart Outlets</span>
+                </div>
+                <div class="control-items">
+                    <div class="control-item">
+                        <span>Coffee Maker</span>
+                        <label class="switch">
+                            <input type="checkbox" onchange="toggleOutlet('coffee-maker', this)">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="control-item">
+                        <span>TV Stand</span>
+                        <label class="switch">
+                            <input type="checkbox" onchange="toggleOutlet('tv-stand', this)">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="smart_home_main.js"></script>
+</body>
+</html>
