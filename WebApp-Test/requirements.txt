@@ -1,0 +1,8 @@
+fastapi==0.68.0
+uvicorn[standard]==0.15.0
+pydantic==1.8.2
+python-multipart==0.0.5
+adafruit-circuitpython-bme280
+adafruit-circuitpython-bh1750
+Adafruit-Blinka
+Adafruit-PlatformDetect
