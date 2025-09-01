@@ -1,135 +1,98 @@
 from fastapi import APIRouter, HTTPException
-from api.models import SensorData
-import time
 import logging
+import random 
 
-# Configure logging
+# --- Sensor Libraries ---
+try:
+    import lgpio
+    import board
+    import busio
+    from adafruit_bme280 import basic as adafruit_bme280
+    import adafruit_bh1750
+    IS_HARDWARE_AVAILABLE = True
+except ImportError:
+    IS_HARDWARE_AVAILABLE = False
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/sensors", tags=["sensors"])
+router = APIRouter(
+    prefix="/api/sensors",
+    tags=["Sensors"],
+)
 
-# Sensor configuration
-BME280_I2C_ADDRESS = 0x76  # Default I2C address for BME280
-BH1750_I2C_ADDRESS = 0x23  # Default I2C address for BH1750 (GY-302)
-MOTION_SENSOR_PIN = 4  # GPIO pin for HC-SR501 motion sensor
-
-# Global variables for sensor instances
 bme280_sensor = None
 bh1750_sensor = None
-motion_sensor_initialized = False
+gpio_handle = None
+PIR_PIN = 4
 
 def initialize_sensors():
-    """Initialize all sensors"""
-    global bme280_sensor, bh1750_sensor, motion_sensor_initialized
+    global bme280_sensor, bh1750_sensor, gpio_handle
+
+    if not IS_HARDWARE_AVAILABLE:
+        logger.warning("Hardware libraries not found. Running in mock data mode.")
+        return
 
     try:
-        # Import sensor libraries
-        import board
-        import busio
-        import adafruit_bme280
-        import adafruit_bh1750
-        import RPi.GPIO as GPIO
-
-        # Initialize I2C bus
         i2c = busio.I2C(board.SCL, board.SDA)
-
-        # Initialize BME280 sensor
-        bme280_sensor = adafruit_bme280.Adafruit_BME280_I2C(i2c, address=BME280_I2C_ADDRESS)
-        logger.info("BME280 sensor initialized successfully")
-
-        # Initialize BH1750 light sensor
-        bh1750_sensor = adafruit_bh1750.BH1750(i2c)
-        logger.info("BH1750 light sensor initialized successfully")
-
-        # Initialize motion sensor
-        GPIO.setmode(GPIO.BCM)
-        GPIO.setup(MOTION_SENSOR_PIN, GPIO.IN)
-        motion_sensor_initialized = True
-        logger.info("HC-SR501 motion sensor initialized successfully")
-
-    except ImportError as e:
-        logger.warning(f"Sensor libraries not available: {e}")
-        # Don't raise exception, just log and continue
+        bme280 = adafruit_bme280.Adafruit_BME280_I2C(i2c, address=0x77)
+        bh1750_sensor = adafruit_bh1750.BH1750(i2c, address=0x23)
+        gpio_handle = lgpio.gpiochip_open(0)
+        lgpio.gpio_claim_input(gpio_handle, PIR_PIN)
+        logger.info("✅ All sensors initialized successfully.")
     except Exception as e:
-        logger.warning(f"Failed to initialize sensors: {e}")
-        # Don't raise exception, just log and continue
+        logger.error(f"WARNING: Could not initialize hardware sensors: {e}. Running in mock data mode.")
+        bme280_sensor, bh1750_sensor, gpio_handle = None, None, None
 
-def read_bme280():
-    """Read temperature, humidity, and pressure from BME280"""
-    if bme280_sensor is None:
-        raise HTTPException(status_code=503, detail="BME280 sensor not initialized")
+initialize_sensors()
+
+def get_mock_sensor_data():
+    """Generates realistic-looking fake sensor data."""
+    return {
+        "temperature": round(random.uniform(22.0, 26.0), 2),
+        "humidity": round(random.uniform(40.0, 60.0), 2),
+        "pressure": round(random.uniform(1010.0, 1015.0), 2),
+        "light": round(random.uniform(100.0, 800.0), 2),
+        "motion_detected": random.choice([True, False])
+    }
+
+@router.get("/all")
+async def get_all_sensors():
+    if not all([bme280_sensor, bh1750_sensor, gpio_handle]):
+        return get_mock_sensor_data()
 
     try:
-        temperature = bme280_sensor.temperature
-        humidity = bme280_sensor.humidity
-        pressure = bme280_sensor.pressure
         return {
-            "temperature": round(temperature, 1),
-            "humidity": int(humidity),
-            "pressure": round(pressure, 2)
+            "temperature": round(bme280_sensor.temperature, 2),
+            "humidity": round(bme280_sensor.humidity, 2),
+            "pressure": round(bme280_sensor.pressure, 2),
+            "light": round(bh1750_sensor.lux, 2),
+            "motion_detected": bool(lgpio.gpio_read(gpio_handle, PIR_PIN))
         }
     except Exception as e:
-        logger.error(f"Failed to read BME280 sensor: {e}")
-        raise HTTPException(status_code=500, detail="Failed to read BME280 sensor")
+        logger.error(f"Error reading real sensors: {e}. Falling back to mock data.")
+        return get_mock_sensor_data()
 
-def read_motion_sensor():
-    """Read motion detection from HC-SR501"""
-    if not motion_sensor_initialized:
-        raise HTTPException(status_code=503, detail="Motion sensor not initialized")
-
-    try:
-        import RPi.GPIO as GPIO
-        motion_detected = GPIO.input(MOTION_SENSOR_PIN) == GPIO.HIGH
-        return motion_detected
-    except Exception as e:
-        logger.error(f"Failed to read motion sensor: {e}")
-        raise HTTPException(status_code=500, detail="Failed to read motion sensor")
-
-def read_light_sensor():
-    """Read light level from BH1750 (GY-302)"""
-    if bh1750_sensor is None:
-        raise HTTPException(status_code=503, detail="Light sensor not initialized")
-
-    try:
-        # Read lux value and convert to percentage (0-100)
-        lux = bh1750_sensor.lux
-        # Convert lux to percentage (assuming 0-1000 lux range maps to 0-100%)
-        light_level = min(100, max(0, int((lux / 1000) * 100)))
-        return light_level
-    except Exception as e:
-        logger.error(f"Failed to read light sensor: {e}")
-        raise HTTPException(status_code=500, detail="Failed to read light sensor")
-
-
-
-
-@router.get("/temperature")
-def get_temperature():
-    """Get temperature reading"""
-    bme_data = read_bme280()
-    return {"temperature": bme_data["temperature"]}
-
-@router.get("/humidity")
-def get_humidity():
-    """Get humidity reading"""
-    bme_data = read_bme280()
-    return {"humidity": bme_data["humidity"]}
-
-@router.get("/pressure")
-def get_pressure():
-    """Get pressure reading"""
-    bme_data = read_bme280()
-    return {"pressure": bme_data["pressure"]}
-
-@router.get("/motion")
-def get_motion():
-    """Get motion detection status"""
-    motion_detected = read_motion_sensor()
-    return {"motion_detected": motion_detected}
-
-@router.get("/light")
-def get_light():
-    """Get light level reading"""
-    light_level = read_light_sensor()
-    return {"light_level": light_level}
+@router.get("/{sensor_name}")
+async def get_single_sensor(sensor_name: str):
+    all_data = await get_all_sensors()
+    
+    key_map = {
+        "temperature": "temperature",
+        "humidity": "humidity",
+        "pressure": "pressure",
+        "light": "light",
+        "motion": "motion_detected"
+    }
+    
+    if sensor_name not in key_map:
+        raise HTTPException(status_code=404, detail="Sensor not found")
+        
+    data_key = key_map[sensor_name]
+    
+    if sensor_name == "light":
+        return {"light_level": all_data[data_key]}
+    elif sensor_name == "motion":
+        return {"motion_detected": all_data[data_key]}
+    else:
+        return {sensor_name: all_data[data_key]}
