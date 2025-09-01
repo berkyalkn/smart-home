@@ -1,95 +1,54 @@
+# =============================================================================
+# IDE / Editor & System Files
+# =============================================================================
 
-venv/
-env/
-.venv/
-# dependencies
-node_modules
+# Ignore OS-specific files
+.DS_Store
+Thumbs.db
 
-# next.js
-.next/
-out/
-
-# production
-build
-
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-
-.eggs/
-*.egg-info/
-dist/
-build/
-eggs/
-parts/
-bin/
-include/
-lib/
-lib64/
-share/
-sdist/
-develop-eggs/
-*.egg
-
-
+# Ignore IDE and editor-specific directories and files
+.idea/
 .vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+*.swp
+*.swo
+*~
 *.code-workspace
 
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
-*.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
 
-config.ini
-secrets.ini
+# =============================================================================
+# Python Backend
+# =============================================================================
 
+# Virtual Environments
+venv/
+env/
+.venv/
+.env/
 
-.DS_Store
-# typescript
-*.tsbuildinfo
-next-env.d.ts
-
-# testing
-coverage/
-*.lcov
-
-Thumbs.db
-
-
-# Python
+# Python cache files and byte-compiled files
 __pycache__/
 *.py[cod]
 *$py.class
-*.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
+
+# Distribution / packaging
 .eggs/
-lib/
-lib64/
+*.egg-info/
+dist/
+build/
+eggs/
 parts/
 sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
+develop-eggs/
 *.egg
+wheels/
 pip-log.txt
 pip-delete-this-directory.txt
+
+# Python Testing
 htmlcov/
 .tox/
 .nox/
@@ -102,6 +61,47 @@ coverage.xml
 *.py,cover
 .hypothesis/
 .pytest_cache/
+*.so
+
+
+# =============================================================================
+# Next.js / Node.js Frontend
+# =============================================================================
+
+# Dependency directories
+node_modules/
+
+# Next.js build and cache outputs
+.next/
+out/
+
+# TypeScript cache
+*.tsbuildinfo
+next-env.d.ts
+
+# Frontend testing
+coverage/
+*.lcov
 
 # Local development files
 *.local
+
+
+# =============================================================================
+# Log Files
+# =============================================================================
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+
+# =============================================================================
+# Sensitive Information (DO NOT COMMIT)
+# =============================================================================
+# Environment variables, secrets, and configuration files
+# These should never be pushed to a public repository.
+.env*
+!/.env.example
+config.ini
+secrets.ini
