@@ -44,7 +44,7 @@ def initialize_sensors():
         logger.error(f"WARNING: Could not initialize hardware sensors: {e}. Running in mock data mode.")
         bme280_sensor, bh1750_sensor, gpio_handle = None, None, None
 
-initialize_sensors()
+
 
 def get_mock_sensor_data():
     """Generates realistic-looking fake sensor data."""
