@@ -23,9 +23,7 @@ interface LightState {
 }
 
 
-
 export default function SmartHomeDashboard() {
-  // Create null sensor data for error states
   const createNullSensorData = (): SensorData => ({
     temperature: { value: "N/A", unit: "", status: "error" },
     humidity: { value: "N/A", unit: "", status: "error" },
@@ -37,92 +35,40 @@ export default function SmartHomeDashboard() {
   const [sensorData, setSensorData] = useState<SensorData | null>(createNullSensorData())
   const [lightState, setLightState] = useState<LightState>({})
 
-  const API_BASE_URL = process.env.NODE_ENV === 'production'
-    ? "http://localhost:8000"
-    : "http://localhost:8000"
+  const API_BASE_URL = "http://raspberrypi.local:8000";
 
-  // Fetch individual sensor data from separate endpoints
-  const fetchIndividualSensorData = async () => {
-    const sensorEndpoints = {
-      temperature: "/api/sensors/temperature",
-      humidity: "/api/sensors/humidity",
-      pressure: "/api/sensors/pressure",
-      motion: "/api/sensors/motion",
-      light: "/api/sensors/light"
-    }
-
-    const results: any = {}
-
-    // Fetch each sensor endpoint individually
-    const fetchPromises = Object.entries(sensorEndpoints).map(async ([key, endpoint]) => {
-      try {
-        const response = await fetch(API_BASE_URL + endpoint)
-        if (response.ok) {
-          const data = await response.json()
-          results[key] = data
-        } else {
-          // If endpoint fails, set to null so it shows as N/A
-          results[key] = null
-        }
-      } catch (error) {
-        // If fetch fails, set to null so it shows as N/A
-        results[key] = null
-      }
-    })
-
-    // Wait for all fetches to complete
-    await Promise.all(fetchPromises)
-
-    return results
-  }
-
-  // Transform sensor data from individual API responses to frontend format
-  const transformSensorData = (apiData: any): SensorData => ({
-    temperature: {
-      value: apiData.temperature?.temperature ?? "N/A",
-      unit: apiData.temperature ? "°C" : "",
-      status: apiData.temperature ? "good" : "error"
-    },
-    humidity: {
-      value: apiData.humidity?.humidity ?? "N/A",
-      unit: apiData.humidity ? "%" : "",
-      status: apiData.humidity ? "good" : "error"
-    },
-    pressure: {
-      value: apiData.pressure?.pressure ?? "N/A",
-      unit: apiData.pressure ? "hPa" : "",
-      status: apiData.pressure ? "good" : "error"
-    },
-    motion: {
-      value: apiData.motion?.motion_detected ?? "N/A",
-      unit: "",
-      status: apiData.motion ? (apiData.motion.motion_detected ? "warning" : "good") : "error"
-    },
-    lightLevel: {
-      value: apiData.light?.light_level ?? "N/A",
-      unit: apiData.light ? "lux" : "",
-      status: apiData.light ? "good" : "error"
-    }
-  })
-
-
+ 
   useEffect(() => {
-    const fetchSensorData = async () => {
+    const fetchAllSensorData = async () => {
       try {
-        // Fetch sensor data from individual endpoints
-        const sensorData = await fetchIndividualSensorData()
-        const transformedData = transformSensorData(sensorData)
-        setSensorData(transformedData)
-      } catch (error) {
-        // Silently handle API errors - sensor cards will show N/A values
-        setSensorData(createNullSensorData())
-      }
-    }
+        
+        const response = await fetch(`${API_BASE_URL}/api/sensors/all`);
+        if (!response.ok) {
+          throw new Error('Backend API responded with an error');
+        }
+        const data = await response.json();
 
-    fetchSensorData()
-    const interval = setInterval(fetchSensorData, 5000)
-    return () => clearInterval(interval)
-  }, [API_BASE_URL])
+        const transformedData: SensorData = {
+          temperature: { value: data.temperature ?? "N/A", unit: "°C", status: "good" },
+          humidity: { value: data.humidity ?? "N/A", unit: "%", status: "good" },
+          pressure: { value: data.pressure ?? "N/A", unit: "hPa", status: "good" },
+          motion: { value: data.motion_detected, unit: "", status: data.motion_detected ? "warning" : "good" },
+          lightLevel: { value: data.light ?? "N/A", unit: "lux", status: "good" }
+        };
+        setSensorData(transformedData);
+
+      } catch (error) {
+        console.error("Error fetching sensor data:", error);
+        setSensorData(createNullSensorData()); 
+      }
+    };
+
+    fetchAllSensorData(); 
+    const interval = setInterval(fetchAllSensorData, 5000); 
+    return () => clearInterval(interval); 
+  }, []); 
+
+
 
   useEffect(() => {
     const fetchLightState = async () => {
@@ -158,7 +104,6 @@ export default function SmartHomeDashboard() {
         }))
       }
     } catch (error) {
-      // Optimistic update for better UX
       setLightState((prev) => ({
         ...prev,
         [room]: {
@@ -170,11 +115,8 @@ export default function SmartHomeDashboard() {
   }
 
 
-
-
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <header className="border-b bg-card/50 backdrop-blur supports-[backdrop-filter]:bg-card/50">
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
@@ -196,14 +138,12 @@ export default function SmartHomeDashboard() {
       </header>
 
       <main className="container mx-auto px-4 py-8 space-y-8">
-        {/* AI Assistant Section */}
         <section className="flex justify-center">
           <div className="w-full max-w-2xl">
             <AIVoiceAssistant />
           </div>
         </section>
 
-        {/* Environment Monitoring Section */}
         <section>
           <div className="mb-6">
             <h2 className="text-2xl font-semibold text-foreground mb-2">Environment Monitoring</h2>
@@ -260,7 +200,6 @@ export default function SmartHomeDashboard() {
           </div>
         </section>
 
-        {/* Device Controls Section */}
         <section>
           <div className="mb-6">
             <h2 className="text-2xl font-semibold text-foreground mb-2">Device Controls</h2>
@@ -276,7 +215,6 @@ export default function SmartHomeDashboard() {
               <OutletControl />
             </div>
 
-            {/* Placeholder for future devices */}
             <div className="lg:col-span-1">
               <div className="bg-card rounded-lg border p-6 text-center h-full flex items-center justify-center">
                 <div className="text-muted-foreground">
